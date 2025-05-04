@@ -8,6 +8,12 @@ const openai = new OpenAI({
 // Analyze emotion/sentiment of a journal entry
 export async function analyzeJournalEntry(text: string) {
   try {
+    // Validate the API key before making a request
+    if (!process.env.OPENAI_API_KEY || process.env.OPENAI_API_KEY === "") {
+      console.error("OpenAI API key is missing or empty");
+      throw new Error("OpenAI API key is not configured");
+    }
+
     const response = await openai.chat.completions.create({
       model: "gpt-4o",
       messages: [
@@ -29,14 +35,24 @@ export async function analyzeJournalEntry(text: string) {
       response_format: { type: "json_object" }
     });
 
-    return JSON.parse(response.choices[0].message.content);
+    if (!response.choices || response.choices.length === 0 || !response.choices[0].message.content) {
+      throw new Error("Invalid response from OpenAI API");
+    }
+
+    try {
+      return JSON.parse(response.choices[0].message.content);
+    } catch (parseError) {
+      console.error("Error parsing OpenAI response:", parseError);
+      throw new Error("Invalid JSON in OpenAI response");
+    }
   } catch (error) {
     console.error("Error analyzing journal entry:", error);
     // Return a default analysis if the API fails
     return {
       primaryEmotion: "neutral",
       emotionalInsight: "Unable to analyze the emotional content at this time.",
-      suggestion: "Try writing more details about how you feel in your entry."
+      suggestion: "Try writing more details about how you feel in your entry.",
+      error: error instanceof Error ? error.message : "Unknown error"
     };
   }
 }

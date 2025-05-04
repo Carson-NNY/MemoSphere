@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -20,8 +20,6 @@ import {
   Mail,
 } from "lucide-react";
 import { motion } from "framer-motion";
-import { Canvas } from "@react-three/fiber";
-import { Stars, RoundedBox } from "@react-three/drei";
 
 const loginSchema = z.object({
   username: z.string().min(3, "Username must be at least 3 characters"),
@@ -40,17 +38,60 @@ const registerSchema = z.object({
 type LoginFormValues = z.infer<typeof loginSchema>;
 type RegisterFormValues = z.infer<typeof registerSchema>;
 
-// Animated 3D Logo component
+// Animated Logo component with pure CSS
 function LogoAnimation() {
   return (
-    <Canvas className="absolute inset-0 z-0">
-      <ambientLight intensity={0.5} />
-      <pointLight position={[10, 10, 10]} />
-      <Stars radius={100} depth={50} count={5000} factor={4} saturation={0} fade speed={1} />
-      <RoundedBox args={[3, 4, 0.2]} radius={0.2} position={[0, 0, -5]} rotation={[0, 0, 0]}>
-        <meshStandardMaterial color="#6366f1" />
-      </RoundedBox>
-    </Canvas>
+    <div className="absolute inset-0 z-0 flex items-center justify-center overflow-hidden">
+      {/* Floating shapes */}
+      <div className="absolute w-32 h-32 bg-indigo-600 rounded-lg opacity-40 animate-float" 
+           style={{ 
+             animationDuration: '6s',
+             left: '10%', 
+             top: '20%' 
+           }} />
+      <div className="absolute w-40 h-40 bg-purple-600 rounded-lg opacity-30 animate-float" 
+           style={{ 
+             animationDuration: '8s', 
+             animationDelay: '1s',
+             right: '15%', 
+             bottom: '25%' 
+           }} />
+      <div className="absolute w-24 h-24 bg-pink-600 rounded-lg opacity-20 animate-float" 
+           style={{ 
+             animationDuration: '7s', 
+             animationDelay: '0.5s',
+             right: '30%', 
+             top: '15%' 
+           }} />
+           
+      {/* Star field background */}
+      <div className="absolute inset-0 overflow-hidden opacity-50">
+        {Array.from({ length: 100 }).map((_, i) => (
+          <div 
+            key={i}
+            className="absolute bg-white rounded-full animate-twinkle"
+            style={{
+              width: `${Math.random() * 3 + 1}px`,
+              height: `${Math.random() * 3 + 1}px`,
+              top: `${Math.random() * 100}%`,
+              left: `${Math.random() * 100}%`,
+              animationDuration: `${Math.random() * 5 + 3}s`,
+              animationDelay: `${Math.random() * 5}s`
+            }}
+          />
+        ))}
+      </div>
+          
+      {/* Journal overlay */}
+      <div className="absolute w-64 h-80 border-4 border-white/20 rounded-lg shadow-lg transform rotate-6 animate-gentle-float"
+           style={{ backgroundColor: 'rgba(99, 102, 241, 0.3)' }}>
+        <div className="w-full h-4 bg-white/20 mt-6 mx-auto" style={{ width: '70%' }} />
+        <div className="w-full h-4 bg-white/20 mt-4 mx-auto" style={{ width: '80%' }} />
+        <div className="w-full h-4 bg-white/20 mt-4 mx-auto" style={{ width: '60%' }} />
+        <div className="w-full h-4 bg-white/20 mt-4 mx-auto" style={{ width: '75%' }} />
+        <div className="w-full h-4 bg-white/20 mt-4 mx-auto" style={{ width: '50%' }} />
+      </div>
+    </div>
   );
 }
 
