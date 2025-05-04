@@ -1,0 +1,147 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Base colors */
+    --background: 0 0% 97%;
+    --foreground: 222 47% 11%;
+    
+    /* Card */
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+    
+    /* Popover */
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+    
+    /* Primary - Purple */
+    --primary: 255 79% 65%;
+    --primary-foreground: 0 0% 100%;
+    
+    /* Secondary - Red */
+    --secondary: 0 77% 71%;
+    --secondary-foreground: 0 0% 100%;
+    
+    /* Accent - Teal */
+    --accent: 174 70% 56%;
+    --accent-foreground: 0 0% 100%;
+    
+    /* Destructive */
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+    
+    /* Muted */
+    --muted: 220 14% 96%;
+    --muted-foreground: 220 8% 46%;
+    
+    /* Border, Input, Ring */
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+    --ring: 255 79% 65%;
+    
+    /* Charts */
+    --chart-1: 255 79% 65%; /* Primary */
+    --chart-2: 0 77% 71%; /* Secondary */
+    --chart-3: 174 70% 56%; /* Accent */
+    --chart-4: 220 8% 46%; /* Muted Foreground */
+    --chart-5: 222 47% 11%; /* Foreground */
+    
+    /* Radius */
+    --radius: 0.75rem;
+    
+    /* Sidebar */
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 222 47% 11%;
+    --sidebar-primary: 255 79% 65%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 174 70% 56%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 255 79% 65%;
+  }
+ 
+  .dark {
+    /* Base colors */
+    --background: 222 47% 11%;
+    --foreground: 210 20% 98%;
+    
+    /* Card */
+    --card: 222 47% 7%;
+    --card-foreground: 210 20% 98%;
+    
+    /* Popover */
+    --popover: 222 47% 7%;
+    --popover-foreground: 210 20% 98%;
+    
+    /* Primary - Purple */
+    --primary: 255 79% 65%;
+    --primary-foreground: 0 0% 100%;
+    
+    /* Secondary - Red */
+    --secondary: 0 77% 71%;
+    --secondary-foreground: 0 0% 100%;
+    
+    /* Accent - Teal */
+    --accent: 174 70% 56%;
+    --accent-foreground: 210 20% 98%;
+    
+    /* Destructive */
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 210 20% 98%;
+    
+    /* Muted */
+    --muted: 222 47% 15%;
+    --muted-foreground: 215 16% 65%;
+    
+    /* Border, Input, Ring */
+    --border: 222 47% 25%;
+    --input: 222 47% 25%;
+    --ring: 255 79% 65%;
+    
+    /* Charts */
+    --chart-1: 255 79% 65%; /* Primary */
+    --chart-2: 0 77% 71%; /* Secondary */
+    --chart-3: 174 70% 56%; /* Accent */
+    --chart-4: 215 16% 65%; /* Muted Foreground */
+    --chart-5: 210 20% 98%; /* Foreground */
+    
+    /* Sidebar */
+    --sidebar-background: 222 47% 7%;
+    --sidebar-foreground: 210 20% 98%;
+    --sidebar-primary: 255 79% 65%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 174 70% 56%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 222 47% 25%;
+    --sidebar-ring: 255 79% 65%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'Inter', sans-serif;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Poppins', sans-serif;
+  }
+  
+  .accent-font {
+    font-family: 'Playfair Display', serif;
+  }
+  
+  .entry-card {
+    @apply transition-all duration-300;
+  }
+  
+  .entry-card:hover {
+    @apply -translate-y-1 shadow-md;
+  }
+}
