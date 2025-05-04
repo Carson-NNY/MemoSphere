@@ -3,9 +3,17 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth } from "./auth";
 import { analyzeJournalEntry, generateMemorySummary, generateMonthlyInsights } from "./openai";
-import { insertEntrySchema } from "@shared/schema";
+import { insertEntrySchema, insertUserSchema } from "@shared/schema";
 import { z } from "zod";
 import { subMonths } from "date-fns";
+
+// Schema for Firebase auth
+const firebaseAuthSchema = z.object({
+  uid: z.string(),
+  displayName: z.string().nullable().optional(),
+  email: z.string().email().nullable().optional(),
+  photoURL: z.string().nullable().optional()
+});
 
 // Middleware to check if user is authenticated
 function isAuthenticated(req: any, res: any, next: any) {
@@ -18,6 +26,43 @@ function isAuthenticated(req: any, res: any, next: any) {
 export async function registerRoutes(app: Express): Promise<Server> {
   // Setup authentication routes
   setupAuth(app);
+  
+  // Firebase authentication endpoint
+  app.post("/api/firebase-auth", async (req, res, next) => {
+    try {
+      const firebaseData = firebaseAuthSchema.parse(req.body);
+      
+      // Check if user with this Firebase UID exists
+      let user = await storage.getUserByFirebaseUid(firebaseData.uid);
+      
+      if (!user) {
+        // Create new user if not exists
+        const username = firebaseData.email?.split('@')[0] || `user_${Date.now()}`;
+        
+        user = await storage.createUser({
+          username,
+          password: `firebase_${Date.now()}`, // This password won't be used for login
+          displayName: firebaseData.displayName || username,
+          email: firebaseData.email || '',
+          photoURL: firebaseData.photoURL || '',
+          firebaseUid: firebaseData.uid
+        });
+      }
+      
+      // Log in the user
+      req.login(user, (err) => {
+        if (err) {
+          return next(err);
+        }
+        return res.status(200).json(user);
+      });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ errors: error.errors });
+      }
+      next(error);
+    }
+  });
 
   // Journal Entries API
   

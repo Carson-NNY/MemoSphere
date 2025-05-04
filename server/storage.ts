@@ -11,6 +11,7 @@ export interface IStorage {
   // User operations
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
+  getUserByFirebaseUid(uid: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
 
   // Journal entry operations
@@ -45,6 +46,11 @@ export class DatabaseStorage implements IStorage {
 
   async getUserByUsername(username: string): Promise<User | undefined> {
     const result = await db.select().from(users).where(eq(users.username, username)).limit(1);
+    return result[0];
+  }
+  
+  async getUserByFirebaseUid(uid: string): Promise<User | undefined> {
+    const result = await db.select().from(users).where(eq(users.firebaseUid, uid)).limit(1);
     return result[0];
   }
 
