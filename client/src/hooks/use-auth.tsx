@@ -35,7 +35,7 @@ type AuthContextType = {
   loginMutation: UseMutationResult<User, Error, LoginData>;
   logoutMutation: UseMutationResult<void, Error, void>;
   registerMutation: UseMutationResult<User, Error, RegisterData>;
-  signInWithGoogle: () => Promise<void>;
+  signInWithGoogle: () => Promise<FirebaseUser | void>;
 };
 
 type LoginData = {
@@ -92,9 +92,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Sign in with Google
   const signInWithGoogle = async () => {
     try {
+      // Add some additional scopes for better profile data
+      googleProvider.addScope('profile');
+      googleProvider.addScope('email');
+      googleProvider.setCustomParameters({
+        prompt: 'select_account'
+      });
+      
       const result = await signInWithPopup(auth, googleProvider);
+      
       // The signed-in user info
       const user = result.user;
+      
       // This gives you a Google Access Token
       const credential = GoogleAuthProvider.credentialFromResult(result);
       if (credential) {
@@ -102,17 +111,48 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // Use token if needed
       }
       
+      // API call to backend happens in the onAuthStateChanged listener
+      // So we don't need to do it here
+      
       toast({
         title: "Successfully signed in with Google",
         description: `Welcome, ${user.displayName || user.email}!`,
       });
+      
+      return user;
     } catch (error: any) {
-      const errorMessage = error.message;
+      // Handle specific error codes
+      let errorTitle = "Google Sign-In Failed";
+      let errorMessage = error.message;
+      
+      // Handle specific Firebase Auth error codes
+      if (error.code) {
+        switch(error.code) {
+          case 'auth/popup-closed-by-user':
+            errorMessage = "Sign-in was cancelled. Please try again.";
+            break;
+          case 'auth/popup-blocked':
+            errorMessage = "Pop-up was blocked by your browser. Please allow pop-ups for this site.";
+            break;
+          case 'auth/cancelled-popup-request':
+            errorMessage = "Multiple pop-up requests were made. Please try again.";
+            break;
+          case 'auth/account-exists-with-different-credential':
+            errorMessage = "An account already exists with the same email address but different sign-in credentials.";
+            break;
+          case 'auth/network-request-failed':
+            errorMessage = "A network error occurred. Please check your connection and try again.";
+            break;
+        }
+      }
+      
       toast({
-        title: "Google Sign-In Failed",
+        title: errorTitle,
         description: errorMessage,
         variant: "destructive",
       });
+      
+      throw error; // Re-throw to let the calling code handle it
     }
   };
 

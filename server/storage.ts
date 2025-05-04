@@ -13,6 +13,7 @@ export interface IStorage {
   getUserByUsername(username: string): Promise<User | undefined>;
   getUserByFirebaseUid(uid: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
+  updateUser(id: number, userData: Partial<User>): Promise<User | undefined>;
 
   // Journal entry operations
   createEntry(entry: InsertEntry): Promise<Entry>;
@@ -56,6 +57,18 @@ export class DatabaseStorage implements IStorage {
 
   async createUser(user: InsertUser): Promise<User> {
     const result = await db.insert(users).values(user).returning();
+    return result[0];
+  }
+  
+  async updateUser(id: number, userData: Partial<User>): Promise<User | undefined> {
+    // Make sure we don't try to update the id field
+    const { id: _id, ...updateData } = userData;
+    
+    const result = await db.update(users)
+      .set(updateData)
+      .where(eq(users.id, id))
+      .returning();
+    
     return result[0];
   }
 

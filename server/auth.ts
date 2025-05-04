@@ -7,15 +7,37 @@ import { promisify } from "util";
 import { storage } from "./storage";
 import { User } from "@shared/schema";
 
+// Explicitly define the type for our database user
+type DbUser = {
+  id: number;
+  username: string;
+  password: string;
+  displayName: string | null;
+  email: string | null;
+  photoURL: string | null;
+  firebaseUid: string | null;
+  createdAt: Date;
+};
+
 declare global {
   namespace Express {
-    interface User extends User {}
+    // Extend the User interface to support both null and undefined for optional fields
+    interface User {
+      id: number;
+      username: string;
+      password: string;
+      displayName?: string | null;
+      email?: string | null;
+      photoURL?: string | null;
+      firebaseUid?: string | null;
+      createdAt: Date;
+    }
   }
 }
 
 const scryptAsync = promisify(scrypt);
 
-async function hashPassword(password: string) {
+export async function hashPassword(password: string) {
   const salt = randomBytes(16).toString("hex");
   const buf = (await scryptAsync(password, salt, 64)) as Buffer;
   return `${buf.toString("hex")}.${salt}`;
@@ -96,14 +118,14 @@ export function setupAuth(app: Express) {
   });
 
   app.post("/api/login", (req, res, next) => {
-    passport.authenticate("local", (err, user) => {
+    passport.authenticate("local", (err: Error | null, user: Express.User | false) => {
       if (err) {
         return next(err);
       }
       if (!user) {
         return res.status(401).json({ message: "Invalid username or password" });
       }
-      req.login(user, (err) => {
+      req.login(user, (err: Error | null) => {
         if (err) {
           return next(err);
         }
@@ -115,7 +137,7 @@ export function setupAuth(app: Express) {
   });
 
   app.post("/api/logout", (req, res, next) => {
-    req.logout((err) => {
+    req.logout((err: Error | null) => {
       if (err) return next(err);
       res.sendStatus(200);
     });
@@ -123,8 +145,22 @@ export function setupAuth(app: Express) {
 
   app.get("/api/user", (req, res) => {
     if (!req.isAuthenticated()) {
-      return res.status(401).json({ message: "Not authenticated" });
+      return res.status(401).json({ 
+        message: "Not authenticated", 
+        code: "AUTH_REQUIRED",
+        details: "You must be logged in to access this resource"
+      });
     }
+    
+    // Safety check - make sure the user object is valid
+    if (!req.user) {
+      return res.status(500).json({ 
+        message: "User session invalid", 
+        code: "SESSION_ERROR",
+        details: "User session is corrupted or invalid"
+      });
+    }
+    
     // Don't return the password hash to the client
     const { password, ...userWithoutPassword } = req.user as User;
     res.json(userWithoutPassword);
