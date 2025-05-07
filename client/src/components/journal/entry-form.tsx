@@ -16,7 +16,12 @@ import { Loader2 } from "lucide-react";
 import { useLocation } from "wouter";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
-const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
+const ACCEPTED_IMAGE_TYPES = [
+  "image/jpeg",
+  "image/jpg",
+  "image/png",
+  "image/webp",
+];
 
 const entryFormSchema = z.object({
   title: z.string().min(1, "Title is required"),
@@ -53,8 +58,10 @@ export function EntryForm({
   const { toast } = useToast();
   const [, navigate] = useLocation();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(defaultValues.imageUrl || null);
-  
+  const [imagePreview, setImagePreview] = useState<string | null>(
+    defaultValues.imageUrl || null
+  );
+
   const {
     register,
     handleSubmit,
@@ -65,16 +72,16 @@ export function EntryForm({
     resolver: zodResolver(entryFormSchema),
     defaultValues,
   });
-  
+
   const isPublic = watch("isPublic");
-  
+
   // Upload image - in a real app this would upload to a storage service
   // For simplicity we're using URLs only
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    
+
     if (!file) return;
-    
+
     if (file.size > MAX_FILE_SIZE) {
       toast({
         title: "File too large",
@@ -83,7 +90,7 @@ export function EntryForm({
       });
       return;
     }
-    
+
     if (!ACCEPTED_IMAGE_TYPES.includes(file.type)) {
       toast({
         title: "Invalid file type",
@@ -92,9 +99,9 @@ export function EntryForm({
       });
       return;
     }
-    
+
     setSelectedFile(file);
-    
+
     // Create a preview
     const reader = new FileReader();
     reader.onload = (event) => {
@@ -103,13 +110,13 @@ export function EntryForm({
     };
     reader.readAsDataURL(file);
   };
-  
+
   const removeImage = () => {
     setSelectedFile(null);
     setImagePreview(null);
     setValue("imageUrl", null);
   };
-  
+
   const createEntryMutation = useMutation({
     mutationFn: async (data: EntryFormValues) => {
       const response = await apiRequest("POST", "/api/entries", data);
@@ -135,7 +142,7 @@ export function EntryForm({
       });
     },
   });
-  
+
   const updateEntryMutation = useMutation({
     mutationFn: async (data: EntryFormValues) => {
       const response = await apiRequest("PUT", `/api/entries/${entryId}`, data);
@@ -162,7 +169,7 @@ export function EntryForm({
       });
     },
   });
-  
+
   const onSubmit = (values: EntryFormValues) => {
     if (!user) {
       toast({
@@ -172,16 +179,17 @@ export function EntryForm({
       });
       return;
     }
-    
+
     if (isEdit && entryId) {
       updateEntryMutation.mutate(values);
     } else {
       createEntryMutation.mutate(values);
     }
   };
-  
-  const isPending = createEntryMutation.isPending || updateEntryMutation.isPending;
-  
+
+  const isPending =
+    createEntryMutation.isPending || updateEntryMutation.isPending;
+
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
       <div className="mb-6">
@@ -192,28 +200,37 @@ export function EntryForm({
           id="entry-title"
           className="w-full px-4 py-2"
           {...register("title")}
+          maxLength={150}
         />
         {errors.title && (
-          <p className="text-destructive text-sm mt-1">{errors.title.message}</p>
+          <p className="text-destructive text-sm mt-1">
+            {errors.title.message}
+          </p>
         )}
       </div>
-      
+
       <div className="mb-6">
-        <Label htmlFor="entry-content" className="block text-sm font-medium mb-1">
+        <Label
+          htmlFor="entry-content"
+          className="block text-sm font-medium mb-1"
+        >
           Journal Entry
         </Label>
         <Textarea
           id="entry-content"
           rows={12}
+          maxLength={4000}
           className="w-full px-4 py-2"
           placeholder="What's on your mind today?"
           {...register("content")}
         />
         {errors.content && (
-          <p className="text-destructive text-sm mt-1">{errors.content.message}</p>
+          <p className="text-destructive text-sm mt-1">
+            {errors.content.message}
+          </p>
         )}
       </div>
-      
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
         <div>
           <Label className="block text-sm font-medium mb-1">
@@ -221,9 +238,9 @@ export function EntryForm({
           </Label>
           {imagePreview ? (
             <div className="relative mt-2 rounded-lg overflow-hidden">
-              <img 
-                src={imagePreview} 
-                alt="Preview" 
+              <img
+                src={imagePreview}
+                alt="Preview"
                 className="w-full h-48 object-cover"
               />
               <Button
@@ -237,13 +254,17 @@ export function EntryForm({
               </Button>
             </div>
           ) : (
-            <div className="border-2 border-dashed border-neutral-300 dark:border-neutral-700 rounded-lg p-4 text-center cursor-pointer" onClick={() => document.getElementById("image-upload")?.click()}>
+            <div
+              className="border-2 border-dashed border-neutral-300 dark:border-neutral-700 rounded-lg p-4 text-center cursor-pointer"
+              onClick={() => document.getElementById("image-upload")?.click()}
+            >
               <div className="space-y-2">
                 <Upload className="mx-auto h-8 w-8 text-neutral-400 dark:text-neutral-600" />
                 <p className="text-sm text-neutral-500 dark:text-neutral-400">
-                  Drag an image here or <span className="text-primary-400">browse</span>
+                  Drag an image here or{" "}
+                  <span className="text-primary-400">browse</span>
                 </p>
-                <input 
+                <input
                   id="image-upload"
                   type="file"
                   className="hidden"
@@ -254,12 +275,12 @@ export function EntryForm({
             </div>
           )}
         </div>
-        
+
         <div>
           <Label className="block text-sm font-medium mb-1">
             Privacy Settings
           </Label>
-          <RadioGroup 
+          <RadioGroup
             defaultValue={isPublic ? "public" : "private"}
             className="space-y-3"
             onValueChange={(value) => setValue("isPublic", value === "public")}
@@ -277,7 +298,7 @@ export function EntryForm({
               </Label>
             </div>
           </RadioGroup>
-          
+
           <div className="mt-4">
             <Label className="block text-sm font-medium mb-1">
               Mood (Optional)
@@ -298,10 +319,11 @@ export function EntryForm({
           </div>
         </div>
       </div>
-      
+
       <div className="flex justify-between items-center mt-6 border-t border-neutral-200 dark:border-neutral-700 pt-4">
         <div className="text-sm text-neutral-600 dark:text-neutral-400">
-          <i className="fas fa-robot text-accent-400 mr-1"></i> AI will analyze your entry for emotional insights
+          <i className="fas fa-robot text-accent-400 mr-1"></i> AI will analyze
+          your entry for emotional insights
         </div>
         <div className="flex space-x-3">
           <Button
@@ -312,7 +334,7 @@ export function EntryForm({
           >
             Cancel
           </Button>
-          <Button 
+          <Button
             type="submit"
             className="bg-primary-400 hover:bg-primary-500 text-white"
             disabled={isPending}

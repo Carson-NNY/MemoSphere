@@ -1,11 +1,14 @@
 import "dotenv/config";
-import { Pool, neonConfig } from "@neondatabase/serverless";
-import { drizzle } from "drizzle-orm/neon-serverless";
-import ws from "ws";
+// import { Pool, neonConfig } from "@neondatabase/serverless";
+// import { drizzle } from "drizzle-orm/neon-serverless";
+import { Pool } from "pg";
+import { drizzle } from "drizzle-orm/node-postgres";
+
+// import ws from "ws";
 import * as schema from "@shared/schema";
 
 // This is the correct way neon config - DO NOT change this
-neonConfig.webSocketConstructor = ws;
+// neonConfig.webSocketConstructor = ws;
 
 if (!process.env.DATABASE_URL) {
   throw new Error(
