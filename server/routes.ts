@@ -7,7 +7,12 @@ import {
   generateMemorySummary,
   generateMonthlyInsights,
 } from "./openai";
-import { insertEntrySchema, insertUserSchema, User } from "@shared/schema";
+import {
+  insertEntrySchema,
+  insertUserSchema,
+  User,
+  InsertEntry,
+} from "@shared/schema";
 import { z } from "zod";
 import { subMonths } from "date-fns";
 import { hashPassword } from "./auth";
@@ -198,8 +203,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
         }
 
-        // Create the entry (without sentimentAnalysis in the initial data)
-        const entry = await storage.createEntry(entryData);
+        // Create the entry
+        const entry = await storage.createEntry({
+          ...entryData,
+          sentimentAnalysis,
+        } as InsertEntry & { sentimentAnalysis?: unknown });
 
         res.status(201).json(entry);
       } catch (error) {
@@ -289,9 +297,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return res.status(403).json({ message: "Access denied" });
         }
 
+        let sentimentAnalysis = existingEntry.sentimentAnalysis;
         // Re-analyze sentiment if content changed
         if (req.body.content && req.body.content !== existingEntry.content) {
-          const sentimentAnalysis = await analyzeJournalEntry(req.body.content);
+          sentimentAnalysis = await analyzeJournalEntry(req.body.content);
 
           // If no mood was provided but we got one from analysis, use it
           if (
@@ -306,6 +315,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         const updatedEntry = await storage.updateEntry(entryId, {
           ...req.body,
+          sentimentAnalysis,
           userId: existingEntry.userId, // Ensure userId doesn't change
         });
 

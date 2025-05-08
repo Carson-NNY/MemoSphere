@@ -10,7 +10,9 @@ import { format } from "date-fns";
 
 export default function CalendarPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(
+    new Date()
+  );
 
   const { data: entries, isLoading } = useQuery({
     queryKey: ["/api/entries"],
@@ -19,7 +21,7 @@ export default function CalendarPage() {
   // Function to check if an entry was created on a specific date
   const hasEntryOnDate = (date: Date) => {
     if (!entries) return false;
-    
+
     const dateString = format(date, "yyyy-MM-dd");
     return entries.some((entry: any) => {
       const entryDate = format(new Date(entry.createdAt), "yyyy-MM-dd");
@@ -28,24 +30,25 @@ export default function CalendarPage() {
   };
 
   // Filter entries for the selected date
-  const entriesForSelectedDate = selectedDate && entries
-    ? entries.filter((entry: any) => {
-        const entryDate = format(new Date(entry.createdAt), "yyyy-MM-dd");
-        const selectedDateString = format(selectedDate, "yyyy-MM-dd");
-        return entryDate === selectedDateString;
-      })
-    : [];
+  const entriesForSelectedDate =
+    selectedDate && entries
+      ? entries.filter((entry: any) => {
+          const entryDate = format(new Date(entry.createdAt), "yyyy-MM-dd");
+          const selectedDateString = format(selectedDate, "yyyy-MM-dd");
+          return entryDate === selectedDateString;
+        })
+      : [];
 
   return (
     <div className="flex h-screen overflow-hidden">
       {/* Sidebar */}
       <Sidebar isOpen={sidebarOpen} setIsOpen={setSidebarOpen} />
-      
+
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Header */}
         <Header onToggleSidebar={() => setSidebarOpen(!sidebarOpen)} />
-        
+
         {/* Content Area */}
         <main className="flex-1 overflow-y-auto bg-neutral-100 dark:bg-neutral-800 p-6">
           <div className="max-w-7xl mx-auto">
@@ -53,7 +56,7 @@ export default function CalendarPage() {
               <CalendarIcon className="inline-block mr-2 h-6 w-6 text-primary-400" />
               Journal Calendar
             </h1>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {/* Calendar Component */}
               <Card>
@@ -72,12 +75,13 @@ export default function CalendarPage() {
                       hasEntry: (date) => hasEntryOnDate(date),
                     }}
                     modifiersClassNames={{
-                      hasEntry: "bg-primary-100 text-primary-600 dark:bg-primary-900/30 dark:text-primary-400 font-bold",
+                      hasEntry:
+                        "bg-primary-100 text-primary-600 dark:bg-primary-900/30 dark:text-primary-400 font-bold",
                     }}
                   />
                 </CardContent>
               </Card>
-              
+
               {/* Entries for Selected Date */}
               <div className="md:col-span-2">
                 <Card>
@@ -109,7 +113,7 @@ export default function CalendarPage() {
                     ) : (
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {entriesForSelectedDate.map((entry: any) => (
-                          <EntryCard 
+                          <EntryCard
                             key={entry.id}
                             id={entry.id}
                             title={entry.title}

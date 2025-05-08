@@ -1,4 +1,12 @@
-import { pgTable, text, serial, integer, boolean, timestamp, json } from "drizzle-orm/pg-core";
+import {
+  pgTable,
+  text,
+  serial,
+  integer,
+  boolean,
+  timestamp,
+  json,
+} from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 import { relations } from "drizzle-orm";
@@ -27,7 +35,9 @@ export const insertUserSchema = createInsertSchema(users).pick({
 // Journal entries
 export const entries = pgTable("entries", {
   id: serial("id").primaryKey(),
-  userId: integer("user_id").references(() => users.id).notNull(),
+  userId: integer("user_id")
+    .references(() => users.id)
+    .notNull(),
   title: text("title").notNull(),
   content: text("content").notNull(),
   mood: text("mood"),
@@ -44,6 +54,7 @@ export const insertEntrySchema = createInsertSchema(entries).pick({
   mood: true,
   isPublic: true,
   imageUrl: true,
+  sentimentAnalysis: true,
 });
 
 // Anonymous entries (stored in browser localStorage)
