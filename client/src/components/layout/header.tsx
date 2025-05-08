@@ -126,7 +126,7 @@ export function Header({ onToggleSidebar, onNewEntry }: HeaderProps) {
           >
             <Bell className="h-5 w-5" />
             <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center bg-secondary-400 text-white rounded-full p-0 text-xs">
-              2
+              0
             </Badge>
           </motion.div>
         </Button>

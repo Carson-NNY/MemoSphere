@@ -237,6 +237,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get public entries
+  app.get("/api/entries/public", async (req, res, next) => {
+    try {
+      const publicEntries = await storage.getPublicEntries();
+      res.json(publicEntries);
+      console.log("Public entries fetched successfully:", publicEntries);
+    } catch (error) {
+      console.error("Error in /api/entries/public:", error); // <-- ADD THIS
+      next(error);
+    }
+  });
   // Get a specific entry
   app.get("/api/entries/:id", async (req, res, next) => {
     try {
@@ -407,16 +418,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
     }
   );
-
-  // Get public entries
-  app.get("/api/entries/public", async (req, res, next) => {
-    try {
-      const publicEntries = await storage.getPublicEntries();
-      res.json(publicEntries);
-    } catch (error) {
-      next(error);
-    }
-  });
 
   // Get monthly insights
   app.get(
