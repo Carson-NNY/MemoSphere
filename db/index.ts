@@ -10,13 +10,17 @@ if (!process.env.DATABASE_URL) {
   );
 }
 
-// ✅ Explicitly allow self-signed SSL certs (fixes Supabase pooler error)
-export const pool = new Pool({
+// Prepare config
+const poolConfig = {
   connectionString: process.env.DATABASE_URL,
   ssl: {
     rejectUnauthorized: false,
   },
-});
+};
 
-// Initialize Drizzle with schema and client
+// ✅ Log the config for verification
+console.log("✅ PG Pool config →", JSON.stringify(poolConfig, null, 2));
+
+// Create pool and drizzle client
+export const pool = new Pool(poolConfig);
 export const db = drizzle({ client: pool, schema });
