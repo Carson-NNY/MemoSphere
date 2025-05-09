@@ -15,7 +15,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "@/hooks/use-theme";
 import { Badge } from "@/components/ui/badge";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import {
@@ -28,6 +28,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/hooks/use-auth";
 import { motion } from "framer-motion";
+import { useSearch } from "@/context/search-context";
 
 interface HeaderProps {
   onToggleSidebar: () => void;
@@ -37,6 +38,11 @@ interface HeaderProps {
 export function Header({ onToggleSidebar, onNewEntry }: HeaderProps) {
   const { theme, setTheme } = useTheme();
   const { user, logoutMutation } = useAuth();
+  const { search, setSearch } = useSearch();
+  const [location] = useLocation();
+  const [, navigate] = useLocation();
+  const [localSearchValue, setLocalSearchValue] = useState(search);
+  const [isSearching, setIsSearching] = useState(false);
 
   const toggleTheme = useCallback(() => {
     setTheme(theme === "dark" ? "light" : "dark");
@@ -61,6 +67,36 @@ export function Header({ onToggleSidebar, onNewEntry }: HeaderProps) {
     logoutMutation.mutate();
   }, [logoutMutation]);
 
+  // Update local search value when global search changes
+  useEffect(() => {
+    setLocalSearchValue(search);
+  }, [search]);
+
+  // Debounced search effect
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setSearch(localSearchValue);
+      // Only navigate if we're actively searching
+      if (localSearchValue && isSearching) {
+        navigate("/personal-entries");
+      }
+    }, 1000); // 1 second delay
+
+    return () => clearTimeout(timer);
+  }, [localSearchValue, setSearch, navigate, isSearching]);
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setLocalSearchValue(e.target.value);
+    setIsSearching(true);
+  };
+
+  // Reset searching state when navigating away
+  useEffect(() => {
+    if (location !== "/personal-entries") {
+      setIsSearching(false);
+    }
+  }, [location]);
+
   if (!user) return null;
 
   // Get initial letter for avatar fallback
@@ -72,6 +108,9 @@ export function Header({ onToggleSidebar, onNewEntry }: HeaderProps) {
     }
     return "U";
   };
+
+  // Show global search on Dashboard and Personal Entries pages
+  const showGlobalSearch = location === "/" || location === "/personal-entries";
 
   return (
     <header className="bg-white dark:bg-neutral-900 border-b border-neutral-200 dark:border-neutral-700 py-4 px-6 flex items-center sticky top-0 z-10">
@@ -86,14 +125,18 @@ export function Header({ onToggleSidebar, onNewEntry }: HeaderProps) {
       </Button>
 
       {/* Search Bar */}
-      <div className="relative flex-1 max-w-md">
-        <Search className="absolute left-3 top-2.5 h-4 w-4 text-neutral-400 dark:text-neutral-600" />
-        <Input
-          type="text"
-          placeholder="Search your journal entries..."
-          className="w-full pl-10 pr-4 bg-neutral-100 dark:bg-neutral-800 border-transparent focus:border-primary-400 dark:focus:border-primary-400 text-neutral-700 dark:text-neutral-300 text-sm"
-        />
-      </div>
+      {showGlobalSearch && (
+        <div className="relative flex-1 max-w-md">
+          <Search className="absolute left-3 top-2.5 h-4 w-4 text-neutral-400 dark:text-neutral-600" />
+          <Input
+            type="text"
+            value={localSearchValue}
+            onChange={handleSearchChange}
+            placeholder="Search all your entries..."
+            className="w-full pl-10 pr-4 bg-neutral-100 dark:bg-neutral-800 border-transparent focus:border-primary-400 dark:focus:border-primary-400 text-neutral-700 dark:text-neutral-300 text-sm"
+          />
+        </div>
+      )}
 
       {/* Action Buttons */}
       <div className="flex items-center ml-auto space-x-4">

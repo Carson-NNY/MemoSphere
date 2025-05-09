@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { ThemeProvider } from "@/hooks/use-theme";
 import { AuthProvider } from "@/hooks/use-auth";
 import { ProtectedRoute } from "@/lib/protected-route";
+import { SearchProvider } from "@/context/search-context";
 
 // Pages
 import DashboardPage from "@/pages/dashboard-page";
@@ -16,6 +17,7 @@ import CalendarPage from "@/pages/calendar-page";
 import MoodTrendsPage from "@/pages/mood-trends-page";
 import MemoriesPage from "@/pages/memories-page";
 import PublicEntriesPage from "@/pages/public-entries-page";
+import PersonalEntriesPage from "@/pages/personal-entries-page";
 
 function Router() {
   return (
@@ -27,6 +29,10 @@ function Router() {
       <ProtectedRoute path="/mood-trends" component={MoodTrendsPage} />
       <ProtectedRoute path="/memories" component={MemoriesPage} />
       <ProtectedRoute path="/public-entries" component={PublicEntriesPage} />
+      <ProtectedRoute
+        path="/personal-entries"
+        component={PersonalEntriesPage}
+      />
       <Route path="/auth" component={AuthPage} />
       <Route component={NotFound} />
     </Switch>
@@ -38,8 +44,10 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <ThemeProvider defaultTheme="light">
         <AuthProvider>
-          <Router />
-          <Toaster />
+          <SearchProvider>
+            <Router />
+            <Toaster />
+          </SearchProvider>
         </AuthProvider>
       </ThemeProvider>
     </QueryClientProvider>

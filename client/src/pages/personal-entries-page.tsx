@@ -1,12 +1,13 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Sidebar } from "@/components/layout/sidebar";
 import { Header } from "@/components/layout/header";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Users, Search, Globe, Filter, Loader2 } from "lucide-react";
+import { Users, Search, Lock, Filter, Loader2 } from "lucide-react";
 import { EntryCard } from "@/components/journal/entry-card";
+import { useSearch } from "@/context/search-context";
 import {
   Select,
   SelectContent,
@@ -15,20 +16,29 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-export default function PublicEntriesPage() {
+export default function PersonalEntriesPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { search: globalSearch } = useSearch();
   const [localSearch, setLocalSearch] = useState("");
   const [moodFilter, setMoodFilter] = useState("all");
 
-  const { data: publicEntries, isLoading } = useQuery<any[]>({
-    queryKey: ["/api/entries/public"],
+  // Update local search when global search changes
+  useEffect(() => {
+    setLocalSearch(globalSearch);
+  }, [globalSearch]);
+
+  // Fetch all user entries (both private and public)
+  const { data: userEntries, isLoading } = useQuery<any[]>({
+    queryKey: ["/api/entries"],
   });
 
-  const filteredEntries = publicEntries
-    ? publicEntries
+  const filteredEntries = userEntries
+    ? userEntries
         .filter((entry: any) => {
-          if (localSearch) {
-            const query = localSearch.toLowerCase();
+          // Use either local search or global search
+          const searchQuery = localSearch || globalSearch;
+          if (searchQuery) {
+            const query = searchQuery.toLowerCase();
             return (
               entry.title.toLowerCase().includes(query) ||
               entry.content.toLowerCase().includes(query)
@@ -37,13 +47,16 @@ export default function PublicEntriesPage() {
           return true;
         })
         .filter((entry: any) => {
-          // Apply mood filter
           if (moodFilter && moodFilter !== "all") {
             return entry.mood === moodFilter;
           }
           return true;
         })
     : [];
+
+  const handleLocalSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setLocalSearch(e.target.value);
+  };
 
   return (
     <div className="flex h-screen overflow-hidden">
@@ -60,8 +73,8 @@ export default function PublicEntriesPage() {
           <div className="max-w-7xl mx-auto">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 space-y-4 md:space-y-0">
               <h1 className="text-2xl font-heading font-bold text-neutral-800 dark:text-neutral-200">
-                <Users className="inline-block mr-2 h-6 w-6 text-primary-400" />
-                Public Journal Entries
+                <Lock className="inline-block mr-2 h-6 w-6 text-primary-400" />
+                Your Journal Entries
               </h1>
 
               <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2 w-full md:w-auto">
@@ -69,9 +82,9 @@ export default function PublicEntriesPage() {
                   <Search className="absolute left-3 top-2.5 h-4 w-4 text-neutral-400 dark:text-neutral-600" />
                   <Input
                     placeholder="Search entries..."
-                    value={localSearch}
-                    onChange={(e) => setLocalSearch(e.target.value)}
                     className="pl-10"
+                    value={localSearch}
+                    onChange={handleLocalSearchChange}
                   />
                 </div>
 
@@ -100,22 +113,24 @@ export default function PublicEntriesPage() {
               <CardContent className="p-4 md:p-6">
                 <div className="flex flex-col md:flex-row items-start md:items-center gap-4">
                   <div className="bg-primary-50 dark:bg-primary-900/30 p-3 rounded-full">
-                    <Globe className="h-6 w-6 text-primary-400" />
+                    <Lock className="h-6 w-6 text-primary-400" />
                   </div>
                   <div className="flex-1">
                     <h3 className="text-lg font-medium mb-1">
-                      Community Space
+                      Your Journal Space
                     </h3>
                     <p className="text-neutral-600 dark:text-neutral-400 text-sm">
-                      Explore journal entries shared by the MemoSphere
-                      community. Connect through shared experiences and
-                      insights.
+                      View and search through all your journal entries, both
+                      private and public.
                     </p>
                   </div>
                   <Button
                     variant="ghost"
                     className="hidden md:flex"
-                    onClick={() => setMoodFilter("all")}
+                    onClick={() => {
+                      setMoodFilter("all");
+                      setLocalSearch("");
+                    }}
                   >
                     View All Entries
                   </Button>
@@ -129,8 +144,8 @@ export default function PublicEntriesPage() {
               </div>
             ) : filteredEntries.length === 0 ? (
               <div className="bg-white dark:bg-neutral-900 rounded-xl shadow-sm p-10 text-center">
-                <Globe className="h-12 w-12 mx-auto mb-4 text-neutral-300 dark:text-neutral-700" />
-                {localSearch || moodFilter !== "all" ? (
+                <Lock className="h-12 w-12 mx-auto mb-4 text-neutral-300 dark:text-neutral-700" />
+                {localSearch || globalSearch || moodFilter !== "all" ? (
                   <>
                     <h3 className="text-lg font-medium mb-2">
                       No matching entries found
@@ -141,8 +156,8 @@ export default function PublicEntriesPage() {
                     <Button
                       variant="outline"
                       onClick={() => {
-                        setLocalSearch("");
                         setMoodFilter("all");
+                        setLocalSearch("");
                       }}
                     >
                       Clear All Filters
@@ -150,13 +165,12 @@ export default function PublicEntriesPage() {
                   </>
                 ) : (
                   <>
-                    <h3 className="text-lg font-medium mb-2">
-                      No public entries yet
-                    </h3>
+                    <h3 className="text-lg font-medium mb-2">No entries yet</h3>
                     <p className="text-neutral-600 dark:text-neutral-400 mb-6">
-                      Be the first to share a journal entry with the community!
+                      Start your journaling journey by creating your first
+                      entry!
                     </p>
-                    <Button>Create a Public Entry</Button>
+                    <Button>Create New Entry</Button>
                   </>
                 )}
               </div>

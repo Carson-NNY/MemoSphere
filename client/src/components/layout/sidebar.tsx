@@ -3,9 +3,16 @@ import { useAuth } from "@/hooks/use-auth";
 import { Link, useLocation } from "wouter";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { 
-  Cog, Home, PenSquare, Calendar, LineChart, 
-  Heart, Users, BookOpen
+import {
+  Cog,
+  Home,
+  PenSquare,
+  Calendar,
+  LineChart,
+  Heart,
+  Users,
+  BookOpen,
+  Lock,
 } from "lucide-react";
 
 interface SidebarProps {
@@ -16,9 +23,9 @@ interface SidebarProps {
 export function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
   const [location] = useLocation();
   const { user, logoutMutation } = useAuth();
-  
+
   if (!user) return null;
-  
+
   const routes = [
     {
       icon: Home,
@@ -46,24 +53,29 @@ export function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
       href: "/memories",
     },
     {
+      icon: Lock,
+      label: "Personal Entries",
+      href: "/personal-entries",
+    },
+    {
       icon: Users,
       label: "Public Entries",
       href: "/public-entries",
     },
   ];
-  
+
   return (
     <>
       {/* Mobile sidebar backdrop */}
       {isOpen && (
-        <div 
+        <div
           className="md:hidden fixed inset-0 z-30 bg-black/40 transition-all"
           onClick={() => setIsOpen(false)}
         />
       )}
-      
+
       {/* Sidebar */}
-      <div 
+      <div
         className={cn(
           "fixed md:sticky top-0 z-40 md:z-0 h-screen w-64 flex-col bg-white dark:bg-neutral-900 border-r border-neutral-200 dark:border-neutral-700 transition-all duration-300 ease-in-out",
           isOpen ? "left-0" : "-left-64 md:left-0"
@@ -79,7 +91,7 @@ export function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
             Your AI-Powered Journal
           </p>
         </div>
-        
+
         {/* Nav Links */}
         <nav className="flex-1 px-4 mt-4">
           <div className="space-y-1">
@@ -106,7 +118,7 @@ export function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
             ))}
           </div>
         </nav>
-        
+
         {/* User Area */}
         <div className="px-4 py-4 border-t border-neutral-200 dark:border-neutral-700">
           <div className="flex items-center">
@@ -119,18 +131,18 @@ export function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
               <p className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
                 {user.username}
               </p>
-              <Button 
-                variant="link" 
-                size="sm" 
+              <Button
+                variant="link"
+                size="sm"
                 className="p-0 h-auto text-xs text-neutral-500 dark:text-neutral-500 hover:text-primary-500 dark:hover:text-primary-400"
                 onClick={() => logoutMutation.mutate()}
               >
                 Sign out
               </Button>
             </div>
-            <Button 
+            <Button
               variant="ghost"
-              size="icon" 
+              size="icon"
               className="ml-auto p-1 rounded-full hover:bg-neutral-200 dark:hover:bg-neutral-700 text-neutral-500 dark:text-neutral-400"
               title="User settings"
             >
