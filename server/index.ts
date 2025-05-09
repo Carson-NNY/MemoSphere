@@ -73,6 +73,6 @@ app.use((req: Request, res: Response, next: NextFunction) => {
   // Railway/Heroku/etc. provide PORT env; default to 5005 locally
   const port = Number(process.env.PORT) || 5005;
   server.listen({ port, host: "0.0.0.0" }, () =>
-    log(`serving on port ${port}`)
+    console.log(`🚀 Server listening on port ${port}`)
   );
 })();
