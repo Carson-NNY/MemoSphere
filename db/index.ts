@@ -23,4 +23,4 @@ console.log("✅ PG Pool config →", JSON.stringify(poolConfig, null, 2));
 
 // Create pool and drizzle client
 export const pool = new Pool(poolConfig);
-export const db = drizzle({ client: pool, schema });
+export const db = drizzle(pool, { schema });
