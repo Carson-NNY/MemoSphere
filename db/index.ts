@@ -1,20 +1,22 @@
 import "dotenv/config";
-// import { Pool, neonConfig } from "@neondatabase/serverless";
-// import { drizzle } from "drizzle-orm/neon-serverless";
 import { Pool } from "pg";
 import { drizzle } from "drizzle-orm/node-postgres";
-
-// import ws from "ws";
 import * as schema from "@shared/schema";
 
-// This is the correct way neon config - DO NOT change this
-// neonConfig.webSocketConstructor = ws;
-
+// Ensure DATABASE_URL is defined
 if (!process.env.DATABASE_URL) {
   throw new Error(
     "DATABASE_URL must be set. Did you forget to provision a database?"
   );
 }
 
-export const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+// ✅ Explicitly allow self-signed SSL certs (fixes Supabase pooler error)
+export const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: {
+    rejectUnauthorized: false,
+  },
+});
+
+// Initialize Drizzle with schema and client
 export const db = drizzle({ client: pool, schema });
