@@ -172,6 +172,7 @@ export default function PublicEntriesPage() {
                     mood={entry.mood}
                     isPublic={entry.isPublic}
                     imageUrl={entry.imageUrl}
+                    user={entry.user}
                   />
                 ))}
               </div>

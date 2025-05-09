@@ -89,7 +89,21 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getPublicEntries(): Promise<Entry[]> {
-    return await db.select().from(entries)
+    return await db.select({
+      id: entries.id,
+      userId: entries.userId,
+      title: entries.title,
+      content: entries.content,
+      mood: entries.mood,
+      isPublic: entries.isPublic,
+      imageUrl: entries.imageUrl,
+      createdAt: entries.createdAt,
+      sentimentAnalysis: entries.sentimentAnalysis,
+      user: {
+        username: users.username
+      }
+    }).from(entries)
+      .leftJoin(users, eq(entries.userId, users.id))
       .where(eq(entries.isPublic, true))
       .orderBy(desc(entries.createdAt));
   }
