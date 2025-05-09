@@ -43,6 +43,7 @@ export function Header({ onToggleSidebar, onNewEntry }: HeaderProps) {
   const [, navigate] = useLocation();
   const [localSearchValue, setLocalSearchValue] = useState(search);
   const [isSearching, setIsSearching] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
 
   const toggleTheme = useCallback(() => {
     setTheme(theme === "dark" ? "light" : "dark");
@@ -109,6 +110,26 @@ export function Header({ onToggleSidebar, onNewEntry }: HeaderProps) {
     return "U";
   };
 
+  // Generate a consistent color based on username
+  const getAvatarColor = (username: string) => {
+    const colors = [
+      "#FF6B6B", // Coral Red
+      "#4ECDC4", // Turquoise
+      "#45B7D1", // Sky Blue
+      "#96CEB4", // Sage Green
+      "#FFEEAD", // Cream Yellow
+      "#D4A5A5", // Dusty Rose
+      "#9B59B6", // Purple
+      "#3498DB", // Blue
+      "#E67E22", // Orange
+      "#2ECC71", // Green
+    ];
+    const index = username
+      .split("")
+      .reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    return colors[index % colors.length];
+  };
+
   // Show global search on Dashboard and Personal Entries pages
   const showGlobalSearch = location === "/" || location === "/personal-entries";
 
@@ -156,23 +177,16 @@ export function Header({ onToggleSidebar, onNewEntry }: HeaderProps) {
         </Button>
 
         {/* Notifications */}
-        <Button
-          variant="ghost"
-          size="icon"
-          className="rounded-full hover:bg-neutral-200 dark:hover:bg-neutral-700 text-neutral-600 dark:text-neutral-400 relative"
-          aria-label="Notifications"
-        >
-          <motion.div
-            initial={{ scale: 0.8 }}
-            animate={{ scale: 1 }}
-            transition={{ duration: 0.2 }}
+        <div className="flex items-center gap-4">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="relative"
+            onClick={() => setShowNotifications(!showNotifications)}
           >
             <Bell className="h-5 w-5" />
-            <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center bg-secondary-400 text-white rounded-full p-0 text-xs">
-              0
-            </Badge>
-          </motion.div>
-        </Button>
+          </Button>
+        </div>
 
         {/* New Entry Button */}
         {onNewEntry ? (
@@ -207,7 +221,10 @@ export function Header({ onToggleSidebar, onNewEntry }: HeaderProps) {
                     src={user.photoURL || undefined}
                     alt={user.displayName || user.username}
                   />
-                  <AvatarFallback className="bg-primary-100 text-primary-700 font-medium">
+                  <AvatarFallback
+                    className="text-white font-medium"
+                    style={{ backgroundColor: getAvatarColor(user.username) }}
+                  >
                     {getInitials()}
                   </AvatarFallback>
                 </Avatar>

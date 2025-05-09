@@ -6,6 +6,7 @@ import { ThemeProvider } from "@/hooks/use-theme";
 import { AuthProvider } from "@/hooks/use-auth";
 import { ProtectedRoute } from "@/lib/protected-route";
 import { SearchProvider } from "@/context/search-context";
+import { Footer } from "@/components/layout/footer";
 
 // Pages
 import DashboardPage from "@/pages/dashboard-page";
@@ -45,7 +46,12 @@ function App() {
       <ThemeProvider defaultTheme="light">
         <AuthProvider>
           <SearchProvider>
-            <Router />
+            <div className="flex flex-col min-h-screen">
+              <div className="flex-1">
+                <Router />
+              </div>
+              <Footer />
+            </div>
             <Toaster />
           </SearchProvider>
         </AuthProvider>
