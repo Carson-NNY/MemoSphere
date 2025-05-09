@@ -1,4 +1,8 @@
+import dns from "node:dns";
+dns.setDefaultResultOrder("ipv4first");
+
 import "dotenv/config";
+
 import express, { Request, Response, NextFunction } from "express";
 import path from "path";
 import { fileURLToPath } from "url";
