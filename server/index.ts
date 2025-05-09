@@ -1,38 +1,42 @@
 import "dotenv/config";
-import express, { type Request, Response, NextFunction } from "express";
+import express, { Request, Response, NextFunction } from "express";
+import path from "path";
+import { fileURLToPath } from "url";
 import { registerRoutes } from "./routes";
-import { setupVite, serveStatic, log } from "./vite";
+import { log } from "./vite"; // keep only log util – no Vite side‑effects in prod
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Helpers
+// ──────────────────────────────────────────────────────────────────────────────
+// We purposely avoid __dirname (it can be undefined after esbuild bundle).
+const currentDir = path.dirname(fileURLToPath(import.meta.url));
+const PUBLIC_DIR = path.join(currentDir, "public");
 
 const app = express();
-// app.use(express.json());
-// app.use(express.urlencoded({ extended: false }));
+
+// Body parsing
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: false, limit: "10mb" }));
 
-app.use((req, res, next) => {
+// Logging middleware for /api routes
+app.use((req: Request, res: Response, next: NextFunction) => {
   const start = Date.now();
-  const path = req.path;
-  let capturedJsonResponse: Record<string, any> | undefined = undefined;
+  const reqPath = req.path;
+  let capturedJson: unknown;
 
-  const originalResJson = res.json;
-  res.json = function (bodyJson, ...args) {
-    capturedJsonResponse = bodyJson;
-    return originalResJson.apply(res, [bodyJson, ...args]);
-  };
+  const originalJson = res.json.bind(res);
+  res.json = function (body: unknown) {
+    capturedJson = body;
+    return originalJson(body);
+  } as unknown as typeof res.json;
 
   res.on("finish", () => {
-    const duration = Date.now() - start;
-    if (path.startsWith("/api")) {
-      let logLine = `${req.method} ${path} ${res.statusCode} in ${duration}ms`;
-      if (capturedJsonResponse) {
-        logLine += ` :: ${JSON.stringify(capturedJsonResponse)}`;
-      }
-
-      if (logLine.length > 80) {
-        logLine = logLine.slice(0, 79) + "…";
-      }
-
-      log(logLine);
+    if (reqPath.startsWith("/api")) {
+      const ms = Date.now() - start;
+      let line = `${req.method} ${reqPath} ${res.statusCode} in ${ms}ms`;
+      if (capturedJson) line += ` :: ${JSON.stringify(capturedJson)}`;
+      if (line.length > 80) line = line.slice(0, 79) + "…";
+      log(line);
     }
   });
 
@@ -40,37 +44,35 @@ app.use((req, res, next) => {
 });
 
 (async () => {
+  // Register API routes first
   const server = await registerRoutes(app);
 
+  // Error handler (last piece of middleware before Vite / static fallback)
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
     const message = err.message || "Internal Server Error";
-
     res.status(status).json({ message });
     throw err;
   });
 
-  // importantly only setup vite in development and after
-  // setting up all the other routes so the catch-all route
-  // doesn't interfere with the other routes
-  if (app.get("env") === "development") {
+  // Decide between dev (Vite middleware) and prod (static files)
+  const isDev = app.get("env") === "development";
+  if (isDev) {
+    // Lazy‑import to avoid bundling Vite for prod
+    const { setupVite } = await import("./vite.js");
     await setupVite(app, server);
   } else {
-    serveStatic(app);
+    // Serve pre‑built static assets (dist/public)
+    app.use(express.static(PUBLIC_DIR));
+    // SPA fallback
+    app.get("*", (_req, res) =>
+      res.sendFile(path.join(PUBLIC_DIR, "index.html"))
+    );
   }
 
-  // ALWAYS serve the app on port 5000
-  // this serves both the API and the client.
-  // It is the only port that is not firewalled.
-  // Replace your hard-coded block with:
+  // Railway/Heroku/etc. provide PORT env; default to 5005 locally
   const port = Number(process.env.PORT) || 5005;
-  server.listen(
-    {
-      port,
-      host: "0.0.0.0",
-    },
-    () => {
-      log(`serving on port ${port}`);
-    }
+  server.listen({ port, host: "0.0.0.0" }, () =>
+    log(`serving on port ${port}`)
   );
 })();
